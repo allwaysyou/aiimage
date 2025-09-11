@@ -13,6 +13,13 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
+                    colors: {
+                        darkbg: '#1a1a1a',
+                        cardbg: '#252525',
+                        primary: '#3b82f6',
+                        secondary: '#ef4444',
+                        textlight: '#f9fafb',
+                    }
                 }
             }
         }
@@ -20,19 +27,18 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-darkbg text-textlight min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl text-center flex flex-col items-center">
-        <h1 class="text-4xl font-extrabold text-blue-800 mb-6">AI Image Studio</h1>
-        <p class="text-gray-600 mb-8">अपनी तस्वीर अपलोड करें और AI से इसे बदलें</p>
+    <div class="bg-cardbg p-8 rounded-xl shadow-2xl w-full max-w-4xl text-center flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-primary mb-2">AI Image Studio</h1>
+        <p class="text-gray-400 mb-8">अपनी तस्वीर अपलोड करें और AI से इसे बदलें</p>
 
         <!-- Image Upload Section -->
         <div class="mb-6 w-full">
-            <label for="imageUpload" class="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-lg transform hover:scale-105">
+            <label for="imageUpload" class="cursor-pointer bg-primary hover:bg-blue-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-lg transform hover:scale-105">
                 तस्वीर चुनें (JPEG/PNG)
             </label>
             <input type="file" id="imageUpload" accept="image/jpeg, image/png" class="hidden">
@@ -41,20 +47,23 @@
         <!-- Image Display Area -->
         <div class="flex flex-col md:flex-row justify-center items-start w-full space-y-4 md:space-y-0 md:space-x-4">
             <!-- User Uploaded Image -->
-            <div id="uploadedImageContainer" class="w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-300">
+            <div id="uploadedImageContainer" class="w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-600">
                 <img id="uploadedImage" class="max-w-full h-auto rounded-xl shadow-lg transition-transform duration-500 ease-in-out transform hover:scale-105" alt="आपकी तस्वीर" style="max-height: 400px; display: none;">
             </div>
 
-            <!-- Generated Image -->
-            <div id="generatedImageContainer" class="w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-300">
-                <img id="generatedImage" class="max-w-full h-auto rounded-xl shadow-lg transition-transform duration-500 ease-in-out transform hover:scale-105" alt="AI द्वारा जनरेट की गई तस्वीर" style="max-height: 400px; display: none;">
+            <!-- Generated Image and Download Button Container -->
+            <div id="generatedImageContainer" class="relative w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-600" style="display: none;">
+                <img id="generatedImage" class="max-w-full h-auto rounded-xl shadow-lg transition-transform duration-500 ease-in-out transform hover:scale-105" alt="AI द्वारा जनरेट की गई तस्वीर" style="max-height: 400px;">
+                <button id="downloadButton" class="absolute bottom-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-110 shadow-lg">
+                    डाउनलोड करें
+                </button>
             </div>
         </div>
         
         <!-- Loading and Message Area -->
-        <div id="statusMessage" class="mt-6 text-center text-red-500 font-semibold" style="display: none;"></div>
-        <div id="loadingIndicator" class="mt-6 text-center text-blue-500" style="display: none;">
-            <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div id="statusMessage" class="mt-6 text-center text-secondary font-semibold" style="display: none;"></div>
+        <div id="loadingIndicator" class="mt-6 text-center text-primary" style="display: none;">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -63,17 +72,12 @@
 
         <!-- Prompt Buttons -->
         <div id="buttonContainer" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full" style="display: none;">
-            <button class="prompt-button bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image to a cartoon style.">इसे कार्टून जैसा बनाओ</button>
-            <button class="prompt-button bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a watercolor painting.">इसे एक वॉटरकलर पेंटिंग बनाओ</button>
-            <button class="prompt-button bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Add futuristic sci-fi effects to the image.">फ्यूचरिस्टिक Sci-Fi इफ़ेक्ट जोड़ो</button>
-            <button class="prompt-button bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a charcoal sketch.">इसे चारकोल स्केच में बदलो</button>
-            <button class="prompt-button bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Then Create a 1/7 scale commercialized figurine of the characters in the picture, in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is a 3D modeling process of this figurine. Next to the computer screen is a toy packaging box, designed in a style reminiscent of high-quality collectible figures, printed with original artwork. The packaging features two-dimensional flat illustrations.">Viral Model Image Generate</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image to a cartoon style.">इसे कार्टून जैसा बनाओ</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a watercolor painting.">इसे एक वॉटरकलर पेंटिंग बनाओ</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Add futuristic sci-fi effects to the image.">फ्यूचरिस्टिक Sci-Fi इफ़ेक्ट जोड़ो</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a charcoal sketch.">इसे चारकोल स्केच में बदलो</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Then Create a 1/7 scale commercialized figurine of the characters in the picture, in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is a 3D modeling process of this figurine. Next to the computer screen is a toy packaging box, designed in a style reminiscent of high-quality collectible figures, printed with original artwork. The packaging features two-dimensional flat illustrations.">Viral Model Image Generate</button>
         </div>
-
-        <!-- Download Button -->
-        <button id="downloadButton" class="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105 shadow-lg" style="display: none;">
-            डाउनलोड करें
-        </button>
     </div>
 
     <script>
@@ -81,6 +85,7 @@
         const imageUpload = document.getElementById('imageUpload');
         const uploadedImage = document.getElementById('uploadedImage');
         const generatedImage = document.getElementById('generatedImage');
+        const generatedImageContainer = document.getElementById('generatedImageContainer');
         const buttonContainer = document.getElementById('buttonContainer');
         const downloadButton = document.getElementById('downloadButton');
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -96,8 +101,7 @@
                     uploadedImage.src = e.target.result;
                     uploadedImage.style.display = 'block';
                     buttonContainer.style.display = 'grid'; // Show buttons after image is selected
-                    generatedImage.style.display = 'none'; // Hide generated image
-                    downloadButton.style.display = 'none'; // Hide download button
+                    generatedImageContainer.style.display = 'none'; // Hide generated image container
                     statusMessage.style.display = 'none'; // Hide status message
                 };
                 reader.readAsDataURL(file);
@@ -169,8 +173,7 @@
 
                     if (base64Data) {
                         generatedImage.src = data:image/jpeg;base64,${base64Data};
-                        generatedImage.style.display = 'block';
-                        downloadButton.style.display = 'block';
+                        generatedImageContainer.style.display = 'flex'; // Show generated image container
                     } else {
                         throw new Error('API se koi tasveer nahi mili. Dobara koshish karein.');
                     }
@@ -197,6 +200,7 @@
             loadingIndicator.style.display = 'block';
             statusMessage.style.display = 'none';
             buttonContainer.style.display = 'none';
+            generatedImageContainer.style.display = 'none';
         }
 
         function hideLoading() {
