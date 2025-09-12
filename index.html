@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Tools Hub</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 { color: #ff0000; }
+    .tool-box {
+      background: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 650px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    input {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      background: #ff0000;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #cc0000; }
+    .result { margin-top: 15px; padding: 10px; text-align: left; }
+    img { max-width: 100%; border-radius: 10px; margin: 10px 0; }
+    .tag {
+      display: inline-block;
+      background: #007bff;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      margin: 5px;
+      font-size: 14px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 YouTube Tools Hub</h1>
+  <p>Thumbnail Downloader + Tags Extractor + Title/Description Extractor + Video Downloader</p>
+
+  <!-- Thumbnail Downloader -->
+  <div class="tool-box">
+    <h2>🎬 YouTube Thumbnail Downloader</h2>
+    <input type="text" id="thumbUrl" placeholder="Paste YouTube Video Link">
+    <br>
+    <button onclick="getThumbnail()">Get Thumbnail</button>
+    <div id="thumbnailResult" class="result"></div>
+  </div>
+
+  <!-- Tags Extractor -->
+  <div class="tool-box">
+    <h2>🏷 YouTube Tags Extractor</h2>
+    <input type="text" id="tagsUrl" placeholder="Paste YouTube Video Link">
+    <br>
+    <button onclick="getTags()">Extract Tags</button>
+    <div id="tagsResult" class="result"></div>
+  </div>
+
+  <!-- Title & Description Extractor -->
+  <div class="tool-box">
+    <h2>📝 YouTube Title & Description Extractor</h2>
+    <input type="text" id="metaUrl" placeholder="Paste YouTube Video Link">
+    <br>
+    <button onclick="getMeta()">Get Title & Description</button>
+    <div id="metaResult" class="result"></div>
+  </div>
+
+  <!-- Video Downloader -->
+  <div class="tool-box">
+    <h2>⬇ YouTube Video Downloader</h2>
+    <input type="text" id="downloadUrl" placeholder="Paste YouTube Video Link">
+    <br>
+    <button onclick="downloadVideo('mp4')">Download MP4</button>
+    <button onclick="downloadVideo('mp3')">Download MP3</button>
+    <div id="downloadResult" class="result"></div>
+  </div>
+
+  <script>
+    // Extract Video ID Function
+    function extractVideoId(url) {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^\"&?\/\s]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    // Thumbnail Downloader
+    function getThumbnail() {
+      const url = document.getElementById('thumbUrl').value;
+      const videoId = extractVideoId(url);
+      if (videoId) {
+        const thumbnailUrl = https://img.youtube.com/vi/${videoId}/maxresdefault.jpg;
+        document.getElementById('thumbnailResult').innerHTML = `
+          <img src="${thumbnailUrl}" alt="Thumbnail">
+          <br>
+          <a href="${thumbnailUrl}" target="_blank">
+            <button>Open & Download</button>
+          </a>
+        `;
+      } else {
+        document.getElementById('thumbnailResult').innerHTML =
+          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
+      }
+    }
+
+    // Tags Extractor
+    function getTags() {
+      const url = document.getElementById('tagsUrl').value;
+      const videoId = extractVideoId(url);
+
+      if (!videoId) {
+        document.getElementById('tagsResult').innerHTML =
+          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
+        return;
+      }
+
+      fetch(tags.php?videoId=${videoId})
+        .then(res => res.json())
+        .then(data => {
+          if (data.tags && data.tags.length > 0) {
+            document.getElementById('tagsResult').innerHTML =
+              data.tags.map(tag => <span class="tag">${tag}</span>).join(" ");
+          } else {
+            document.getElementById('tagsResult').innerHTML = "<p>No tags found ❌</p>";
+          }
+        })
+        .catch(err => {
+          document.getElementById('tagsResult').innerHTML =
+            "<p style='color:red;'>⚠ Error fetching tags</p>";
+        });
+    }
+
+    // Title & Description Extractor
+    function getMeta() {
+      const url = document.getElementById('metaUrl').value;
+      const videoId = extractVideoId(url);
+
+      if (!videoId) {
+        document.getElementById('metaResult').innerHTML =
+          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
+        return;
+      }
+
+      fetch(meta.php?videoId=${videoId})
+        .then(res => res.json())
+        .then(data => {
+          if (data.title) {
+            document.getElementById('metaResult').innerHTML = `
+              <h3>📌 Title:</h3>
+              <p>${data.title}</p>
+              <h3>📝 Description:</h3>
+              <pre>${data.description}</pre>
+            `;
+          } else {
+            document.getElementById('metaResult').innerHTML = "<p>No data found ❌</p>";
+          }
+        })
+        .catch(err => {
+          document.getElementById('metaResult').innerHTML =
+            "<p style='color:red;'>⚠ Error fetching details</p>";
+        });
+    }
+
+    // Video Downloader
+    function downloadVideo(format) {
+      const url = document.getElementById('downloadUrl').value;
+      const videoId = extractVideoId(url);
+
+      if (!videoId) {
+        document.getElementById('downloadResult').innerHTML =
+          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
+        return;
+      }
+
+      document.getElementById('downloadResult').innerHTML =
+        <p>⏳ Preparing ${format.toUpperCase()} download...</p>;
+
+      // यहाँ backend script (download.php) call होगा
+      window.location.href = download.php?videoId=${videoId}&format=${format};
+    }
+  </script>
+</body>
+</html>
