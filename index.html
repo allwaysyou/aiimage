@@ -1,206 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <title>YouTube Tools Hub</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f9fc;
-      color: #333;
-      text-align: center;
-      padding: 30px;
-    }
-    h1 { color: #ff0000; }
-    .tool-box {
-      background: #fff;
-      border-radius: 15px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 650px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    input {
-      padding: 10px;
-      width: 70%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      background: #ff0000;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover { background: #cc0000; }
-    .result { margin-top: 15px; padding: 10px; text-align: left; }
-    img { max-width: 100%; border-radius: 10px; margin: 10px 0; }
-    .tag {
-      display: inline-block;
-      background: #007bff;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 15px;
-      margin: 5px;
-      font-size: 14px;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 10px;
-      border-radius: 10px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+    </style>
 </head>
-<body>
-  <h1>🔥 YouTube Tools Hub</h1>
-  <p>Thumbnail Downloader + Tags Extractor + Title/Description Extractor + Video Downloader</p>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center p-4 min-h-screen">
+    <div class="bg-gray-800 rounded-3xl shadow-lg p-6 max-w-lg w-full flex flex-col items-center border border-blue-500 transform transition-transform duration-500 hover:scale-105">
+        <h1 class="text-4xl font-bold mb-2 text-blue-400">AI Image Studio</h1>
+        <p class="text-gray-400 mb-6 text-center">अपनी तस्वीर अपलोड करें और AI से इसे बदलें</p>
 
-  <!-- Thumbnail Downloader -->
-  <div class="tool-box">
-    <h2>🎬 YouTube Thumbnail Downloader</h2>
-    <input type="text" id="thumbUrl" placeholder="Paste YouTube Video Link">
-    <br>
-    <button onclick="getThumbnail()">Get Thumbnail</button>
-    <div id="thumbnailResult" class="result"></div>
-  </div>
+        <img id="preview" src="#" alt="Image Preview" class="hidden w-full h-auto max-h-80 object-contain mb-4 rounded-lg border border-gray-600 transition-opacity duration-500 opacity-0" />
 
-  <!-- Tags Extractor -->
-  <div class="tool-box">
-    <h2>🏷 YouTube Tags Extractor</h2>
-    <input type="text" id="tagsUrl" placeholder="Paste YouTube Video Link">
-    <br>
-    <button onclick="getTags()">Extract Tags</button>
-    <div id="tagsResult" class="result"></div>
-  </div>
+        <input type="file" id="imageInput" accept="image/jpeg, image/png" class="hidden">
+        <button id="selectButton" class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full transition-all duration-300 shadow-md transform hover:scale-105">
+            तस्वीर चुनें (JPEG/PNG)
+        </button>
 
-  <!-- Title & Description Extractor -->
-  <div class="tool-box">
-    <h2>📝 YouTube Title & Description Extractor</h2>
-    <input type="text" id="metaUrl" placeholder="Paste YouTube Video Link">
-    <br>
-    <button onclick="getMeta()">Get Title & Description</button>
-    <div id="metaResult" class="result"></div>
-  </div>
+        <div id="loading" class="hidden flex flex-col items-center mt-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="mt-2 text-blue-400">Generating...</p>
+        </div>
 
-  <!-- Video Downloader -->
-  <div class="tool-box">
-    <h2>⬇ YouTube Video Downloader</h2>
-    <input type="text" id="downloadUrl" placeholder="Paste YouTube Video Link">
-    <br>
-    <button onclick="downloadVideo('mp4')">Download MP4</button>
-    <button onclick="downloadVideo('mp3')">Download MP3</button>
-    <div id="downloadResult" class="result"></div>
-  </div>
+        <div id="buttons" class="hidden w-full mt-6 space-y-3">
+            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image to a cartoon style.">इसे कार्टून जैसा बनाओ</button>
+            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image into a watercolor painting.">इसे एक वॉटरकलर पेंटिंग बनाओ</button>
+            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Add futuristic sci-fi effects to the image.">फ्यूचरिस्टिक Sci-Fi इफ़ेक्ट जोड़ो</button>
+            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image into a charcoal sketch.">इसे चारकोल स्केच में बदलो</button>
+            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Then Create a 1/7 scale commercialized figurine of the characters in the picture, in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is a 3D modeling process of this figurine. Next to the computer screen is a toy packaging box, designed in a style reminiscent of high-quality collectible figures, printed with original artwork. The packaging features two-dimensional flat illustrations.">वायरल मॉडल इमेज जनरेट करें</button>
+        </div>
+    </div>
 
-  <script>
-    // Extract Video ID Function
-    function extractVideoId(url) {
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^\"&?\/\s]{11})/;
-      const match = url.match(regex);
-      return match ? match[1] : null;
-    }
+    <div id="custom-alert" class="hidden fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300">
+        <p id="custom-alert-message"></p>
+    </div>
 
-    // Thumbnail Downloader
-    function getThumbnail() {
-      const url = document.getElementById('thumbUrl').value;
-      const videoId = extractVideoId(url);
-      if (videoId) {
-        const thumbnailUrl = https://img.youtube.com/vi/${videoId}/maxresdefault.jpg;
-        document.getElementById('thumbnailResult').innerHTML = `
-          <img src="${thumbnailUrl}" alt="Thumbnail">
-          <br>
-          <a href="${thumbnailUrl}" target="_blank">
-            <button>Open & Download</button>
-          </a>
-        `;
-      } else {
-        document.getElementById('thumbnailResult').innerHTML =
-          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
-      }
-    }
-
-    // Tags Extractor
-    function getTags() {
-      const url = document.getElementById('tagsUrl').value;
-      const videoId = extractVideoId(url);
-
-      if (!videoId) {
-        document.getElementById('tagsResult').innerHTML =
-          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
-        return;
-      }
-
-      fetch(tags.php?videoId=${videoId})
-        .then(res => res.json())
-        .then(data => {
-          if (data.tags && data.tags.length > 0) {
-            document.getElementById('tagsResult').innerHTML =
-              data.tags.map(tag => <span class="tag">${tag}</span>).join(" ");
-          } else {
-            document.getElementById('tagsResult').innerHTML = "<p>No tags found ❌</p>";
-          }
-        })
-        .catch(err => {
-          document.getElementById('tagsResult').innerHTML =
-            "<p style='color:red;'>⚠ Error fetching tags</p>";
+    <script>
+        const API_KEY = ""; // Replace with your actual API key
+    
+        const imageInput = document.getElementById('imageInput');
+        const selectButton = document.getElementById('selectButton');
+        const preview = document.getElementById('preview');
+        const loading = document.getElementById('loading');
+        const buttonsDiv = document.getElementById('buttons');
+        const customAlert = document.getElementById('custom-alert');
+        const customAlertMessage = document.getElementById('custom-alert-message');
+    
+        let uploadedImage = null;
+    
+        selectButton.addEventListener('click', () => {
+            imageInput.click();
         });
-    }
-
-    // Title & Description Extractor
-    function getMeta() {
-      const url = document.getElementById('metaUrl').value;
-      const videoId = extractVideoId(url);
-
-      if (!videoId) {
-        document.getElementById('metaResult').innerHTML =
-          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
-        return;
-      }
-
-      fetch(meta.php?videoId=${videoId})
-        .then(res => res.json())
-        .then(data => {
-          if (data.title) {
-            document.getElementById('metaResult').innerHTML = `
-              <h3>📌 Title:</h3>
-              <p>${data.title}</p>
-              <h3>📝 Description:</h3>
-              <pre>${data.description}</pre>
-            `;
-          } else {
-            document.getElementById('metaResult').innerHTML = "<p>No data found ❌</p>";
-          }
-        })
-        .catch(err => {
-          document.getElementById('metaResult').innerHTML =
-            "<p style='color:red;'>⚠ Error fetching details</p>";
+    
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedImage = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden', 'opacity-0');
+                    preview.classList.add('opacity-100');
+                    buttonsDiv.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
         });
-    }
+    
+        buttonsDiv.addEventListener('click', async (event) => {
+            if (event.target.tagName === 'BUTTON' && uploadedImage) {
+                const prompt = event.target.dataset.prompt;
+                showLoading(true);
+    
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64Image = e.target.result.split(',')[1];
+                    await generateImage(prompt, base64Image);
+                };
+                reader.readAsDataURL(uploadedImage);
+            }
+        });
+    
+        async function generateImage(prompt, base64Image) {
+            // NOTE: When the API key is an empty string, the Canvas environment will handle authentication automatically.
+            const API_URL = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY};
+    
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseModalities: ["IMAGE"]
+                }
+            };
+    
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+    
+                if (!response.ok) {
+                    throw new Error(HTTP error! status: ${response.status});
+                }
+    
+                const result = await response.json();
+                const generatedBase64 = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                
+                if (generatedBase64) {
+                    preview.src = "data:image/jpeg;base64," + generatedBase64;
+                } else {
+                    showAlert("API से कोई तस्वीर नहीं मिली।");
+                }
+            } catch (error) {
+                console.error("Error generating image:", error);
+                showAlert("तस्वीर बनाने में कोई समस्या आ गई। कृपया फिर से कोशिश करें।");
+            } finally {
+                showLoading(false);
+            }
+        }
+    
+        function showLoading(show) {
+            loading.classList.toggle('hidden', !show);
+            buttonsDiv.classList.toggle('hidden', show);
+            selectButton.classList.toggle('hidden', show);
+        }
 
-    // Video Downloader
-    function downloadVideo(format) {
-      const url = document.getElementById('downloadUrl').value;
-      const videoId = extractVideoId(url);
-
-      if (!videoId) {
-        document.getElementById('downloadResult').innerHTML =
-          "<p style='color:red;'>❌ Invalid YouTube URL</p>";
-        return;
-      }
-
-      document.getElementById('downloadResult').innerHTML =
-        <p>⏳ Preparing ${format.toUpperCase()} download...</p>;
-
-      // यहाँ backend script (download.php) call होगा
-      window.location.href = download.php?videoId=${videoId}&format=${format};
-    }
-  </script>
+        function showAlert(message) {
+            customAlertMessage.textContent = message;
+            customAlert.classList.remove('hidden');
+            setTimeout(() => {
+                customAlert.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
