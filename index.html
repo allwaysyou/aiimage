@@ -4,155 +4,227 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Image Studio</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        darkbg: '#1a1a1a',
+                        cardbg: '#252525',
+                        primary: '#3b82f6',
+                        secondary: '#ef4444',
+                        textlight: '#f9fafb',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 16px;
+        }
+        .file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        .file-input::before {
+            content: 'तस्वीर चुनें (JPEG/PNG)';
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            border-radius: 9999px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: scale(1);
+        }
+        .file-input:hover::before {
+            background: #2563eb;
+            transform: scale(1.05);
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-center p-4 min-h-screen">
-    <div class="bg-gray-800 rounded-3xl shadow-lg p-6 max-w-lg w-full flex flex-col items-center border border-blue-500 transform transition-transform duration-500 hover:scale-105">
-        <h1 class="text-4xl font-bold mb-2 text-blue-400">AI Image Studio</h1>
-        <p class="text-gray-400 mb-6 text-center">अपनी तस्वीर अपलोड करें और AI से इसे बदलें</p>
+<body class="bg-darkbg text-textlight min-h-screen flex items-center justify-center p-4">
 
-        <img id="preview" src="#" alt="Image Preview" class="hidden w-full h-auto max-h-80 object-contain mb-4 rounded-lg border border-gray-600 transition-opacity duration-500 opacity-0" />
+    <div class="bg-cardbg p-8 rounded-xl shadow-2xl w-full max-w-4xl text-center flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-primary mb-2">AI Image Studio</h1>
+        <p class="text-gray-400 mb-8">अपनी तस्वीर अपलोड करें और AI से इसे बदलें</p>
 
-        <input type="file" id="imageInput" accept="image/jpeg, image/png" class="hidden">
-        <button id="selectButton" class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full transition-all duration-300 shadow-md transform hover:scale-105">
-            तस्वीर चुनें (JPEG/PNG)
-        </button>
-
-        <div id="loading" class="hidden flex flex-col items-center mt-4">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-            <p class="mt-2 text-blue-400">Generating...</p>
+        <!-- Image Upload Section -->
+        <div class="mb-6 w-full">
+            <label for="imageUpload" class="cursor-pointer file-input"></label>
+            <input type="file" id="imageUpload" accept="image/jpeg, image/png" class="hidden">
         </div>
 
-        <div id="buttons" class="hidden w-full mt-6 space-y-3">
-            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image to a cartoon style.">इसे कार्टून जैसा बनाओ</button>
-            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image into a watercolor painting.">इसे एक वॉटरकलर पेंटिंग बनाओ</button>
-            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Add futuristic sci-fi effects to the image.">फ्यूचरिस्टिक Sci-Fi इफ़ेक्ट जोड़ो</button>
-            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Convert the image into a charcoal sketch.">इसे चारकोल स्केच में बदलो</button>
-            <button class="w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-all duration-300 transform hover:scale-105" data-prompt="Then Create a 1/7 scale commercialized figurine of the characters in the picture, in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is a 3D modeling process of this figurine. Next to the computer screen is a toy packaging box, designed in a style reminiscent of high-quality collectible figures, printed with original artwork. The packaging features two-dimensional flat illustrations.">वायरल मॉडल इमेज जनरेट करें</button>
+        <!-- Image Display Area -->
+        <div class="flex flex-col md:flex-row justify-center items-start w-full space-y-4 md:space-y-0 md:space-x-4">
+            <!-- User Uploaded Image -->
+            <div id="uploadedImageContainer" class="w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-600">
+                <img id="uploadedImage" class="max-w-full h-auto rounded-xl shadow-lg transition-transform duration-500 ease-in-out transform hover:scale-105" alt="आपकी तस्वीर" style="max-height: 400px; display: none;">
+            </div>
+
+            <!-- Generated Image and Download Button Container -->
+            <div id="generatedImageContainer" class="relative w-full flex justify-center p-2 rounded-xl border border-dashed border-gray-600" style="display: none;">
+                <img id="generatedImage" class="max-w-full h-auto rounded-xl shadow-lg transition-transform duration-500 ease-in-out transform hover:scale-105" alt="AI द्वारा जनरेट की गई तस्वीर" style="max-height: 400px;">
+                <button id="downloadButton" class="absolute bottom-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-110 shadow-lg">
+                    डाउनलोड करें
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading and Message Area -->
+        <div id="statusMessage" class="mt-6 text-center text-secondary font-semibold" style="display: none;"></div>
+        <div id="loadingIndicator" class="mt-6 text-center text-primary" style="display: none;">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2">तस्वीर जनरेट हो रही है...</p>
+        </div>
+
+        <!-- Prompt Buttons -->
+        <div id="buttonContainer" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full" style="display: none;">
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image to a cartoon style.">इसे कार्टून जैसा बनाओ</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a watercolor painting.">इसे एक वॉटरकलर पेंटिंग बनाओ</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Add futuristic sci-fi effects to the image.">फ्यूचरिस्टिक Sci-Fi इफ़ेक्ट जोड़ो</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Convert the image into a charcoal sketch.">इसे चारकोल स्केच में बदलो</button>
+            <button class="prompt-button bg-gray-700 hover:bg-gray-600 text-textlight font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out" data-prompt="Then Create a 1/7 scale commercialized figurine of the characters in the picture, in a realistic style, in a real environment. The figurine is placed on a computer desk. The figurine has a round transparent acrylic base, with no text on the base. The content on the computer screen is a 3D modeling process of this figurine. Next to the computer screen is a toy packaging box, designed in a style reminiscent of high-quality collectible figures, printed with original artwork. The packaging features two-dimensional flat illustrations.">Viral Model Image Generate</button>
         </div>
     </div>
-
-    <div id="custom-alert" class="hidden fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300">
-        <p id="custom-alert-message"></p>
-    </div>
-
+    
     <script>
-        const API_KEY = ""; // Replace with your actual API key
-    
-        const imageInput = document.getElementById('imageInput');
-        const selectButton = document.getElementById('selectButton');
-        const preview = document.getElementById('preview');
-        const loading = document.getElementById('loading');
-        const buttonsDiv = document.getElementById('buttons');
-        const customAlert = document.getElementById('custom-alert');
-        const customAlertMessage = document.getElementById('custom-alert-message');
-    
-        let uploadedImage = null;
-    
-        selectButton.addEventListener('click', () => {
-            imageInput.click();
-        });
-    
-        imageInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                uploadedImage = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden', 'opacity-0');
-                    preview.classList.add('opacity-100');
-                    buttonsDiv.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    
-        buttonsDiv.addEventListener('click', async (event) => {
-            if (event.target.tagName === 'BUTTON' && uploadedImage) {
-                const prompt = event.target.dataset.prompt;
-                showLoading(true);
-    
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const base64Image = e.target.result.split(',')[1];
-                    await generateImage(prompt, base64Image);
-                };
-                reader.readAsDataURL(uploadedImage);
-            }
-        });
-    
-        async function generateImage(prompt, base64Image) {
-            // NOTE: When the API key is an empty string, the Canvas environment will handle authentication automatically.
-            const API_URL = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY};
-    
-            const payload = {
-                contents: [
-                    {
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { mimeType: "image/jpeg", data: base64Image } }
-                        ]
-                    }
-                ],
-                generationConfig: {
-                    responseModalities: ["IMAGE"]
-                }
-            };
-    
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-    
-                if (!response.ok) {
-                    throw new Error(HTTP error! status: ${response.status});
-                }
-    
-                const result = await response.json();
-                const generatedBase64 = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                
-                if (generatedBase64) {
-                    preview.src = "data:image/jpeg;base64," + generatedBase64;
-                } else {
-                    showAlert("API से कोई तस्वीर नहीं मिली।");
-                }
-            } catch (error) {
-                console.error("Error generating image:", error);
-                showAlert("तस्वीर बनाने में कोई समस्या आ गई। कृपया फिर से कोशिश करें।");
-            } finally {
-                showLoading(false);
-            }
-        }
-    
-        function showLoading(show) {
-            loading.classList.toggle('hidden', !show);
-            buttonsDiv.classList.toggle('hidden', show);
-            selectButton.classList.toggle('hidden', show);
-        }
+        window.onload = function() {
+            const imageUpload = document.getElementById('imageUpload');
+            const uploadedImage = document.getElementById('uploadedImage');
+            const generatedImage = document.getElementById('generatedImage');
+            const generatedImageContainer = document.getElementById('generatedImageContainer');
+            const buttonContainer = document.getElementById('buttonContainer');
+            const downloadButton = document.getElementById('downloadButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const statusMessage = document.getElementById('statusMessage');
 
-        function showAlert(message) {
-            customAlertMessage.textContent = message;
-            customAlert.classList.remove('hidden');
-            setTimeout(() => {
-                customAlert.classList.add('hidden');
-            }, 3000);
-        }
+            const apiKey = "";
+
+            imageUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        uploadedImage.src = e.target.result;
+                        uploadedImage.style.display = 'block';
+                        buttonContainer.style.display = 'grid'; 
+                        generatedImageContainer.style.display = 'none'; 
+                        statusMessage.style.display = 'none'; 
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.querySelectorAll('.prompt-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const prompt = button.getAttribute('data-prompt'); 
+                    const uploadedBase64 = uploadedImage.src.split(',')[1];
+
+                    if (!uploadedBase64) {
+                        statusMessage.textContent = 'कृपया पहले एक तस्वीर अपलोड करें।';
+                        statusMessage.style.display = 'block';
+                        return;
+                    }
+
+                    showLoading();
+
+                    try {
+                        const apiUrl = https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey};
+                        
+                        const payload = {
+                            contents: [{
+                                parts: [{
+                                    text: prompt
+                                }, {
+                                    inlineData: {
+                                        mimeType: "image/jpeg",
+                                        data: uploadedBase64
+                                    }
+                                }]
+                            }],
+                            generationConfig: {
+                                responseModalities: ["IMAGE"]
+                            }
+                        };
+
+                        let response = null;
+                        let retries = 0;
+                        const maxRetries = 3;
+
+                        while (retries < maxRetries) {
+                            try {
+                                response = await fetch(apiUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(payload)
+                                });
+                                if (response.status !== 429) {
+                                    break;
+                                }
+                            } catch (e) {
+                                console.error("Fetch error:", e);
+                            }
+                            retries++;
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+                        }
+
+                        if (!response || !response.ok) {
+                             const errorBody = await response.json();
+                             throw new Error(API Request failed: ${response.statusText} - ${JSON.stringify(errorBody)});
+                        }
+
+                        const result = await response.json();
+                        const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+                        if (base64Data) {
+                            generatedImage.src = data:image/jpeg;base64,${base64Data};
+                            generatedImageContainer.style.display = 'flex'; 
+                        } else {
+                            throw new Error('API se koi tasveer nahi mili. Dobara koshish karein.');
+                        }
+                    } catch (error) {
+                        statusMessage.textContent = Error: ${error.message};
+                        statusMessage.style.display = 'block';
+                        console.error('API call failed:', error);
+                    } finally {
+                        hideLoading();
+                    }
+                });
+            });
+
+            downloadButton.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.href = generatedImage.src;
+                link.download = 'ai_generated_image.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            function showLoading() {
+                loadingIndicator.style.display = 'block';
+                statusMessage.style.display = 'none';
+                buttonContainer.style.display = 'none';
+                generatedImageContainer.style.display = 'none';
+            }
+
+            function hideLoading() {
+                loadingIndicator.style.display = 'none';
+                buttonContainer.style.display = 'grid';
+            }
+        };
     </script>
 </body>
 </html>
