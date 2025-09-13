@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home | My Website</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-brand">My Website</div>
+  <div class="navbar-links">
+    <a href="home.html">Home</a>
+    <a href="index.html">Cards</a>
+    <a href="admin.html">Admin Panel</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms & Conditions</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+  <div class="navbar-toggle" onclick="toggleNavbarLinks()">&#9776;</div>
+</nav>
+<script>
+function toggleNavbarLinks() {
+  document.querySelector('.navbar-links').classList.toggle('active');
+}
+</script>
+  <nav class="navbar">
+    <!-- navigation links as above -->
+  </nav>
+  <div class="page-container">
+    <h1>Welcome!</h1>
+    <p>Yeh website aapko custom cards aur prompts create karne ki suvidha deti hai.<br>
+    <b>Use navigation bar for Cards, Admin panel, Privacy policy & other pages.</b></p>
+  </div>
+  <script>
+  function toggleNavbarLinks() {
+    document.querySelector('.navbar-links').classList.toggle('active');
+  }
+  </script>
+</body>
+</html>

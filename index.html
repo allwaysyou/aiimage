@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cards | My Website</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <span class="navbar-brand">My Website</span>
+    <span class="navbar-toggle" onclick="toggleNavbarLinks()">☰</span>
+    <ul class="navbar-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="index.html">Cards</a></li>
+      <li><a href="admin.html">Admin Panel</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms & Conditions</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+  <script>
+    function toggleNavbarLinks() {
+      document.querySelector('.navbar-links').classList.toggle('active');
+    }
+  </script>
+  <div class="page-container">
+    <h1 style="margin-top:10px; font-size:2rem; text-align:center;">Cards</h1>
+<div class="search-bar-container">
+  <div class="search-bar-premium">
+    <input type="text" id="searchInput" placeholder="🔍 Search cards, prompts, tags..." />
+  </div>
+</div>
+<div class="cards-list" id="cards-container"></div>
+  </div>
+  <script>
+    let allCards = [];
+    async function fetchCards() {
+      try {
+        const res = await fetch('http://localhost:5000/api/cards');
+        return await res.json();
+      } catch (err) { return []; }
+    }
+    function filterCards(cards, query) {
+      query = query.trim().toLowerCase();
+      if (!query) return cards;
+      return cards.filter(card =>
+        card.buttonName.toLowerCase().includes(query) ||
+        card.promptText.toLowerCase().includes(query) ||
+        (Array.isArray(card.tags) && card.tags.some(t => t.toLowerCase().includes(query)))
+      );
+    }
+    async function renderCards() {
+      allCards = await fetchCards();
+      showCards(allCards);
+    }
+    function showCards(cards) {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+      if (cards.length === 0) {
+        container.innerHTML = '<p style="color:#bcbcdf; text-align:center;">Koi card available nahi hai.</p>';
+        return;
+      }
+      cards.forEach(({ buttonName, promptText, thumbnailUrl, tags }) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const btnTry = document.createElement('button');
+        btnTry.className = 'try-btn';
+        btnTry.textContent = buttonName;
+        btnTry.addEventListener('click', () => {
+          navigator.clipboard.writeText(promptText).then(() => {
+            alert('Prompt copied: ' + promptText);
+          });
+        });
+        const img = document.createElement('img');
+        img.src = thumbnailUrl;
+        img.alt = 'Card Image';
+        const p = document.createElement('p');
+        p.textContent = promptText;
+        card.appendChild(btnTry);
+        card.appendChild(img);
+        card.appendChild(p);
+        if (tags && tags.length) {
+          const tagsDiv = document.createElement('div');
+          tagsDiv.className = 'tags';
+          tagsDiv.innerHTML = tags.map(tag => `<span>${tag}</span>`).join(' ');
+          card.appendChild(tagsDiv);
+        }
+        container.appendChild(card);
+      });
+    }
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value;
+      showCards(filterCards(allCards, query));
+    });
+    renderCards();
+  </script>
+</body>
+</html>
