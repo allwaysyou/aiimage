@@ -35,8 +35,9 @@
     <div class="cards-list" id="cards-container"></div>
   </div>
   <script>
-    const backendBase = 'https://aiimage-q8fv.onrender.com';
+    const backendBase = 'https://aiimage-q8fv.onrender.com'; // apne deployed backend URL se replace karein
     let allCards = [];
+
     async function fetchCards() {
       try {
         const res = await fetch(backendBase + '/api/cards');
@@ -47,6 +48,7 @@
         return [];
       }
     }
+
     function filterCards(cards, query) {
       query = query.trim().toLowerCase();
       if (!query) return cards;
@@ -56,10 +58,7 @@
         (Array.isArray(card.tags) && card.tags.some(t => t.toLowerCase().includes(query)))
       );
     }
-    async function renderCards() {
-      allCards = await fetchCards();
-      showCards(allCards);
-    }
+
     function showCards(cards) {
       const container = document.getElementById('cards-container');
       container.innerHTML = '';
@@ -67,7 +66,7 @@
         container.innerHTML = '<p style="color:#bcbcdf; text-align:center;">Koi card available nahi hai.</p>';
         return;
       }
-      cards.forEach(({ buttonName, promptText, thumbnailUrl, tags }, idx) => {
+      cards.forEach(({ _id, buttonName, promptText, thumbnailUrl, tags }) => {
         const card = document.createElement('div');
         card.className = 'card';
 
@@ -105,15 +104,22 @@
           card.appendChild(tagsDiv);
         }
 
-        card.onclick = () => window.location = 'card.html?id=' + idx;
+        card.onclick = () => window.location = 'card.html?id=' + _id;
 
         container.appendChild(card);
       });
     }
+
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value;
       showCards(filterCards(allCards, query));
     });
+
+    async function renderCards() {
+      allCards = await fetchCards();
+      showCards(allCards);
+    }
+
     renderCards();
   </script>
 </body>
