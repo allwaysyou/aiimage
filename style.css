@@ -313,7 +313,7 @@ transform: scale(1.13);
   width: 100%;
   max-width: 360px;
   aspect-ratio: 16 / 9;
-  height: auto;
+  height: 700px;
   object-fit: cover;
   background: #fff;
   margin: 10px auto 12px;
@@ -350,4 +350,5 @@ transform: scale(1.13);
 
 
 }
+
 
