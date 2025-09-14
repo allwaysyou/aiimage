@@ -305,6 +305,7 @@ transform: scale(1.13);
   padding: 14px 10px;
   margin: 0 auto;
   max-width: 390px;
+  height: 700px;
   text-align: center;
 }
 
@@ -350,5 +351,6 @@ transform: scale(1.13);
 
 
 }
+
 
 
