@@ -27,6 +27,7 @@
   <script>
     const ADMIN_USER = 'admin';
     const ADMIN_PASS = 'admin123';
+    const backendBase = 'https://aiimage-q8fv.onrender.com';
 
     function showLogin() {
       document.getElementById('panel-root').innerHTML = `
@@ -51,7 +52,6 @@
         }
       }
     }
-
     function showPanel() {
       document.getElementById('panel-root').innerHTML = `
         <div class="form-container">
@@ -71,29 +71,34 @@
       `;
       loadAdminJS();
     }
-
     function logoutAdmin() {
       localStorage.removeItem('adminSession');
       showLogin();
     }
-
     function loadAdminJS() {
-      // admin JS logic here (add-card, delete, tags, etc.)
       const form = document.getElementById('add-card-form');
       const container = document.getElementById('cards-container');
+
       async function fetchCards() {
-        try { const res = await fetch('http://localhost:5000/api/cards'); return await res.json(); }
-        catch (err) { return []; }
+        try { 
+          const res = await fetch(backendBase + '/api/cards'); 
+          return await res.json(); 
+        } catch (err) { 
+          alert('Server error: ' + err.message);
+          return []; 
+        }
       }
+
       async function deleteCard(idx) {
         if (!confirm('Delete karna hai?')) return;
         try {
-          const res = await fetch(`http://localhost:5000/api/cards/${idx}`, { method: 'DELETE' });
+          const res = await fetch(`${backendBase}/api/cards/${idx}`, { method: 'DELETE' });
           const data = await res.json();
           if (res.ok) renderAdminCards();
           else alert(data.error || 'Delete error');
         } catch (err) { alert('Delete error: ' + err.message); }
       }
+
       async function renderAdminCards() {
         const cards = await fetchCards();
         container.innerHTML = '';
@@ -109,8 +114,14 @@
           btnTry.textContent = buttonName;
           btnTry.addEventListener('click',()=>navigator.clipboard.writeText(promptText));
           const img = document.createElement('img');
-          img.src = 'https://aiimage-q8fv.onrender.com' + thumbnailUrl;
-
+          // FIX image path logic
+          let imgSrc = '';
+          if (thumbnailUrl) {
+            imgSrc = thumbnailUrl.startsWith('/uploads/')
+              ? backendBase + thumbnailUrl
+              : backendBase + '/uploads/' + thumbnailUrl;
+          }
+          img.src = imgSrc || '';
           img.alt = 'Card Image';
           const p = document.createElement('p');
           p.textContent = promptText;
@@ -118,7 +129,10 @@
           btnDelete.className = 'delete-btn';
           btnDelete.innerHTML = '×';
           btnDelete.onclick = () => deleteCard(idx);
-          card.appendChild(btnTry); card.appendChild(img); card.appendChild(p); card.appendChild(btnDelete);
+          card.appendChild(btnTry); 
+          card.appendChild(img); 
+          card.appendChild(p); 
+          card.appendChild(btnDelete);
           if(tags && tags.length){
             const tagsDiv=document.createElement('div');
             tagsDiv.className='tags';
@@ -128,6 +142,7 @@
           container.appendChild(card);
         });
       }
+
       form.onsubmit = async function(e){
         e.preventDefault();
         const buttonName = document.getElementById('buttonName').value.trim();
@@ -147,10 +162,10 @@
         formData.append('tags', JSON.stringify(tags));
         if (imageFile) formData.append('image', imageFile);
         try {
-          const res = await fetch('http://localhost:5000/api/cards', { method: 'POST', body: formData });
+          const res = await fetch(backendBase + '/api/cards', { method: 'POST', body: formData });
           const data = await res.json();
           if (res.ok) {
-            alert(data.message);
+            alert(data.message || 'Card added!');
             form.reset();
             renderAdminCards();
           } else {
@@ -167,6 +182,3 @@
   </script>
 </body>
 </html>
-
-
-
