@@ -27,34 +27,45 @@
   </script>
   <div class="page-container">
     <h1 style="margin-top:10px; font-size:2rem; text-align:center;">Cards</h1>
-<div class="search-bar-container">
-  <div class="search-bar-premium">
-    <input type="text" id="searchInput" placeholder="🔍 Search cards, prompts, tags..." />
-  </div>
-</div>
-<div class="cards-list" id="cards-container"></div>
+    <div class="search-bar-container">
+      <div class="search-bar-premium">
+        <input type="text" id="searchInput" placeholder="🔍 Search cards, prompts, tags..." />
+      </div>
+    </div>
+    <div class="cards-list" id="cards-container"></div>
   </div>
   <script>
+    // --------- CONFIG ---------
+    const backendBase = 'https://aiimage-q8fv.onrender.com';
+
     let allCards = [];
+
     async function fetchCards() {
       try {
-        const res = await fetch('http://localhost:5000/api/cards');
+        const res = await fetch(backendBase + '/api/cards');
+        if (!res.ok) throw new Error('API error: ' + res.status);
         return await res.json();
-      } catch (err) { return []; }
+      } catch (err) {
+        alert('Server se cards lane mein error: ' + err.message);
+        return [];
+      }
     }
+
     function filterCards(cards, query) {
       query = query.trim().toLowerCase();
       if (!query) return cards;
       return cards.filter(card =>
-        card.buttonName.toLowerCase().includes(query) ||
-        card.promptText.toLowerCase().includes(query) ||
+        (card.buttonName && card.buttonName.toLowerCase().includes(query)) ||
+        (card.promptText && card.promptText.toLowerCase().includes(query)) ||
         (Array.isArray(card.tags) && card.tags.some(t => t.toLowerCase().includes(query)))
       );
     }
+
     async function renderCards() {
       allCards = await fetchCards();
       showCards(allCards);
     }
+
     function showCards(cards) {
       const container = document.getElementById('cards-container');
       container.innerHTML = '';
@@ -65,6 +76,7 @@
       cards.forEach(({ buttonName, promptText, thumbnailUrl, tags }) => {
         const card = document.createElement('div');
         card.className = 'card';
+
         const btnTry = document.createElement('button');
         btnTry.className = 'try-btn';
         btnTry.textContent = buttonName;
@@ -73,15 +85,25 @@
             alert('Prompt copied: ' + promptText);
           });
         });
-        const img = document.createElement('img');
-        img.src = 'https://aiimage-q8fv.onrender.com' + thumbnailUrl;
 
+        const img = document.createElement('img');
+        // FIX: Final image src logic
+        let imgSrc = '';
+        if (thumbnailUrl) {
+          imgSrc = thumbnailUrl.startsWith('/uploads/')
+            ? backendBase + thumbnailUrl
+            : backendBase + '/uploads/' + thumbnailUrl;
+        }
+        img.src = imgSrc;
         img.alt = 'Card Image';
+
         const p = document.createElement('p');
-        p.textContent = promptText;
+        p.textContent = promptText || '';
+
         card.appendChild(btnTry);
         card.appendChild(img);
         card.appendChild(p);
+
         if (tags && tags.length) {
           const tagsDiv = document.createElement('div');
           tagsDiv.className = 'tags';
@@ -91,14 +113,13 @@
         container.appendChild(card);
       });
     }
+
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const query = e.target.value;
       showCards(filterCards(allCards, query));
     });
+
     renderCards();
   </script>
 </body>
 </html>
-
-
-
