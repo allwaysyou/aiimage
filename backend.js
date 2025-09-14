@@ -1,80 +1,94 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = 5000;
+
+// MongoDB Atlas connection string (replace with your actual URI)
+const MONGODB_URI = 'mongodb+srv://sadilkhan653_db_user:Sadilkhan1234@@cluster0.dd0huok.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
+// Connect to MongoDB Atlas
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const DATA_FILE = './cardsData.json';
-
-function loadCards() {
-    try {
-        const data = fs.readFileSync(DATA_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch {
-        return [];
-    }
-}
-function saveCards(cards) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(cards, null, 2));
-}
-
-// Multer storage setup
+// Multer storage setup for image uploads
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, './uploads/');
-    },
-    filename: function(req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
+  destination: function(req, file, cb) {
+    cb(null, './uploads/');
+  },
+  filename: function(req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
 });
 const upload = multer({ storage: storage });
 
-// POST endpoint for image/card upload
-app.post('/api/cards', upload.single('image'), (req, res) => {
-    const { buttonName, promptText } = req.body;
-    let thumbnailUrl = req.body.thumbnailUrl;
+// Define Mongoose schema and model for Card
+const cardSchema = new mongoose.Schema({
+  buttonName: { type: String, required: true },
+  promptText: { type: String, required: true },
+  thumbnailUrl: { type: String, required: true }
+});
+const Card = mongoose.model('Card', cardSchema);
 
-    if (req.file) {
-        thumbnailUrl = `/uploads/${req.file.filename}`;
-    }
+// POST endpoint to add a new card with image upload
+app.post('/api/cards', upload.single('image'), async (req, res) => {
+  const { buttonName, promptText } = req.body;
+  let thumbnailUrl = req.body.thumbnailUrl;
 
-    if (!buttonName || !promptText || !thumbnailUrl) {
-        return res.status(400).json({ error: 'Sabhi fields chahiye' });
-    }
+  if (req.file) {
+    thumbnailUrl = `/uploads/${req.file.filename}`;
+  }
 
-    const cards = loadCards();
-    cards.push({ buttonName, promptText, thumbnailUrl });
-    saveCards(cards);
+  if (!buttonName || !promptText || !thumbnailUrl) {
+    return res.status(400).json({ error: 'Sabhi fields chahiye' });
+  }
 
+  try {
+    const newCard = new Card({ buttonName, promptText, thumbnailUrl });
+    await newCard.save();
     res.json({ message: 'Card successfully added!' });
+  } catch (err) {
+    console.error('Error adding card:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// GET endpoint
-app.get('/api/cards', (req, res) => {
-    const cards = loadCards();
+// GET endpoint to fetch all cards
+app.get('/api/cards', async (req, res) => {
+  try {
+    const cards = await Card.find({});
     res.json(cards);
+  } catch (err) {
+    console.error('Error fetching cards:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// DELETE endpoint (admin only use, index.html doesn't expose)
-app.delete('/api/cards/:idx', (req, res) => {
-    const idx = parseInt(req.params.idx);
-    let cards = loadCards();
+// DELETE endpoint to delete a card by MongoDB ID
+app.delete('/api/cards/:id', async (req, res) => {
+  const id = req.params.id;
 
-    if (idx >= 0 && idx < cards.length) {
-        cards.splice(idx, 1);
-        saveCards(cards);
-        res.json({ message: 'Card deleted!' });
-    } else {
-        res.status(404).json({ error: 'Card not found!' });
+  try {
+    const deletedCard = await Card.findByIdAndDelete(id);
+    if (!deletedCard) {
+      return res.status(404).json({ error: 'Card not found!' });
     }
+    res.json({ message: 'Card deleted!' });
+  } catch (err) {
+    console.error('Error deleting card:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-app.listen(PORT, () => console.log('Server running at http://localhost:5000'));
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
