@@ -310,9 +310,10 @@ transform: scale(1.13);
 
 .card img {
   display: block;
-  width: 94%;
-  max-width: 340px;
-  height: 202px;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 16 / 9;
+  height: auto;
   object-fit: cover;
   background: #fff;
   margin: 10px auto 12px;
@@ -349,3 +350,4 @@ transform: scale(1.13);
 
 
 }
+
