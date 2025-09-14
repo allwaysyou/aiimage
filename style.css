@@ -289,7 +289,7 @@ transform: scale(1.13);
 .page-container, .form-container { max-width: 98vw; padding: 10px 3px 10px 3px; margin-top:10px; }
 #add-card-form { gap: 10px; }
 .cards-list { grid-template-columns: 1fr; gap:13px; margin-top:7px; }
-.card img { max-height: 95px; }
+.card img { max-height: 200px; }
 
   .cards-list {
   display: flex;
@@ -305,7 +305,6 @@ transform: scale(1.13);
   padding: 14px 10px;
   margin: 0 auto;
   max-width: 390px;
-  height: 700px;
   text-align: center;
 }
 
@@ -351,6 +350,7 @@ transform: scale(1.13);
 
 
 }
+
 
 
 
