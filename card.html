@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>AI Card – Generate Photo</title>
   <style>
+    /* (aapke existing styles yahin rahenge) */
     body {
       margin: 0; min-height:100vh;
       background: linear-gradient(135deg, #322D47 0, #1E223E 100%);
@@ -30,8 +31,27 @@
       color:#ddeeff;
     }
     .card-title {text-align:center;font-size:1.33rem;font-weight:700;color:#fde2ff;margin-bottom:5px;}
-    .prompt-text {color:#a7e1ed;font-size:1.03rem;margin-bottom:20px;text-align:center;font-weight:400;word-break:break-word;}
-    .upload-section {margin-bottom:22px;text-align:center;}
+    .prompt-text {color:#a7e1ed;font-size:1.03rem;margin-bottom:12px;text-align:center;font-weight:400;word-break:break-word;}
+    .copy-prompt-btn {
+      display: block;
+      width: 120px;
+      margin: 0 auto 20px;
+      background: #41cf60;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 0;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 2px 10px #25ffcc66;
+      transition: background-color 0.3s;
+    }
+    .copy-prompt-btn:hover {
+      background: #2fb34b;
+    }
+    /* baaki styles aapke existing honge */
+    .upload-section { margin-bottom:22px; text-align:center; }
     .file-label {
       background:linear-gradient(90deg,#41cf60 0,#20e6d2 100%);
       color:#fff; padding:9px 24px; border-radius:20px; font-weight:500;
@@ -64,7 +84,7 @@
       <h2>How to use</h2>
       <ol>
         <li>अपनी फोटो "Choose file" से upload करें और preview देखें।</li>
-        <li>नीचे दिख रहे prompt को कॉपी करने के लिए "AI Generate Now" दबाएँ।</li>
+        <li>नीचे दिख रहे prompt को कॉपी करने के लिए "Copy Prompt" या "AI Generate Now" दबाएँ।</li>
         <li>अपनी पसंदीदा AI app/web चुनें जिसमें फोटो upload करें और prompt paste करें।</li>
         <li>उस AI साइट/ऐप में Image Create, Edit या Modify करें।</li>
       </ol>
@@ -73,9 +93,10 @@
     <!-- ACTUAL CARD DATA -->
     <div class="card-title" id="cardTitle"></div>
     <div class="prompt-text" id="cardPrompt"></div>
+    <button class="copy-prompt-btn" id="copyPromptBtn">Copy Prompt</button>
     <div class="upload-section">
       <label for="fileInput" class="file-label">अपनी फोटो चुनें</label>
-      <input type="file" id="fileInput" accept="image/*">
+      <input type="file" id="fileInput" accept="image/*" />
       <img id="previewImg" style="display:none;" />
     </div>
     <button class="ai-btn" id="genBtn">AI Generate Now</button>
@@ -98,7 +119,9 @@
         const res = await fetch(backendBase + '/api/cards');
         const allCards = await res.json();
         return allCards[cardId] || allCards[0];
-      } catch(err) { return null; }
+      } catch (err) {
+        return null;
+      }
     }
     async function init() {
       const card = await fetchCard();
@@ -106,24 +129,34 @@
       document.getElementById('cardTitle').textContent = card.buttonName || 'AI Card';
       document.getElementById('cardPrompt').textContent = card.promptText || '';
       document.getElementById('copiedText').textContent = '';
+      // Copy Prompt Button Logic
+      const copyPromptBtn = document.getElementById('copyPromptBtn');
+      copyPromptBtn.onclick = function () {
+        const prompt = document.getElementById('cardPrompt').textContent;
+        copyPromptBtn.textContent = 'COPIED!';
+        navigator.clipboard.writeText(prompt).then(() => {
+          setTimeout(() => (copyPromptBtn.textContent = 'Copy Prompt'), 1500);
+        });
+      };
       // File upload/preview logic
       const fileInput = document.getElementById('fileInput');
       const previewImg = document.getElementById('previewImg');
-      fileInput.onchange = function(e) {
+      fileInput.onchange = function (e) {
         const file = e.target.files[0];
-        if(file){
+        if (file) {
           const reader = new FileReader();
-          reader.onload = function(ev) {
+          reader.onload = function (ev) {
             previewImg.src = ev.target.result;
-            previewImg.style.display = "block";
+            previewImg.style.display = 'block';
           };
           reader.readAsDataURL(file);
         } else {
-          previewImg.style.display = "none";
+          previewImg.style.display = 'none';
         }
       };
-      document.getElementById('genBtn').onclick = function() {
-        navigator.clipboard.writeText(card.promptText).then(()=>{
+      // Generate Now Button Logic
+      document.getElementById('genBtn').onclick = function () {
+        navigator.clipboard.writeText(card.promptText).then(() => {
           document.getElementById('copiedText').textContent =
             'Prompt copied! अब अपनी पसंदीदा AI साइट पर फोटो upload करें और prompt paste करें.';
         });
