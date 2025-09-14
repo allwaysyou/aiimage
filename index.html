@@ -110,6 +110,8 @@
           tagsDiv.innerHTML = tags.map(tag => `<span>${tag}</span>`).join(' ');
           card.appendChild(tagsDiv);
         }
+        cardDiv.onclick = ()=>window.location='card.html?id='+idx;
+
         container.appendChild(card);
       });
     }
@@ -123,4 +125,5 @@
   </script>
 </body>
 </html>
+
 
