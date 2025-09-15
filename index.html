@@ -25,7 +25,6 @@
       document.querySelector('.navbar-links').classList.toggle('active');
     }
   </script>
-
   <div class="page-container">
     <h1 style="margin-top:10px; font-size:2rem; text-align:center;">Cards</h1>
     <div class="search-bar-container">
@@ -35,11 +34,9 @@
     </div>
     <div class="cards-list" id="cards-container"></div>
   </div>
-
   <script>
     const backendBase = 'https://aiimage-q8fv.onrender.com'; // backend url
     let allCards = [];
-
     async function fetchCards() {
       try {
         const res = await fetch(backendBase + '/api/cards');
@@ -50,7 +47,6 @@
         return [];
       }
     }
-
     function filterCards(cards, query) {
       query = query.trim().toLowerCase();
       if (!query) return cards;
@@ -60,20 +56,16 @@
         (Array.isArray(card.tags) && card.tags.some(tag => tag.toLowerCase().includes(query)))
       );
     }
-
     function showCards(cards) {
       const container = document.getElementById('cards-container');
       container.innerHTML = '';
-
       if (cards.length === 0) {
         container.innerHTML = '<p style="color:#bcbcdf; text-align:center;">Koi card available nahi hai.</p>';
         return;
       }
-
       cards.forEach(({ _id, buttonName, promptText, thumbnailUrl, tags }) => {
         const card = document.createElement('div');
         card.className = 'card';
-
         const btnTry = document.createElement('button');
         btnTry.className = 'try-btn';
         btnTry.textContent = buttonName || 'Try';
@@ -83,46 +75,41 @@
           btnTry.textContent = "COPIED!";
           setTimeout(() => (btnTry.textContent = buttonName || 'Try'), 1200);
         });
-
         const img = document.createElement('img');
         if (thumbnailUrl) {
-          img.src = thumbnailUrl.startsWith('/uploads/')
-            ? backendBase + thumbnailUrl
-            : backendBase + '/uploads/' + thumbnailUrl;
+          if(thumbnailUrl.startsWith('http')) {
+            img.src = thumbnailUrl;
+          } else if (thumbnailUrl.startsWith('/uploads/')) {
+            img.src = backendBase + thumbnailUrl;
+          } else {
+            img.src = backendBase + '/uploads/' + thumbnailUrl;
+          }
         } else {
           img.src = ''; // fallback if no image
         }
         img.alt = 'card image';
-
         const p = document.createElement('p');
         p.textContent = promptText || '';
-
         card.appendChild(btnTry);
         card.appendChild(img);
         card.appendChild(p);
-
         if (tags && tags.length) {
           const tagsDiv = document.createElement('div');
           tagsDiv.className = 'tags';
           tagsDiv.innerHTML = tags.map(tag => `<span>${tag}</span>`).join(' ');
           card.appendChild(tagsDiv);
         }
-
         card.onclick = () => window.location = `card.html?id=${_id}`;
-
         container.appendChild(card);
       });
     }
-
     document.getElementById('searchInput').addEventListener('input', (e) => {
       showCards(filterCards(allCards, e.target.value));
     });
-
     async function renderCards() {
       allCards = await fetchCards();
       showCards(allCards);
     }
-
     renderCards();
   </script>
 </body>
