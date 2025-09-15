@@ -30,7 +30,6 @@
     const ADMIN_USER = 'admin';
     const ADMIN_PASS = 'admin123';
     const backendBase = 'https://aiimage-q8fv.onrender.com';
-
     function showLogin() {
       document.getElementById('panel-root').innerHTML = `
         <div class="form-container">
@@ -54,7 +53,6 @@
         }
       };
     }
-
     function showPanel() {
       document.getElementById('panel-root').innerHTML = `
         <div class="form-container">
@@ -74,16 +72,13 @@
       `;
       loadAdminJS();
     }
-
     function logoutAdmin() {
       localStorage.removeItem('adminSession');
       showLogin();
     }
-
     function loadAdminJS() {
       const form = document.getElementById('add-card-form');
       const container = document.getElementById('cards-container');
-
       async function fetchCards() {
         try {
           const res = await fetch(backendBase + '/api/cards');
@@ -93,7 +88,6 @@
           return [];
         }
       }
-
       async function deleteCard(id) {
         if (!confirm('Delete karna hai?')) return;
         try {
@@ -105,7 +99,6 @@
           alert('Delete error: ' + err.message);
         }
       }
-
       async function renderAdminCards() {
         const cards = await fetchCards();
         container.innerHTML = '';
@@ -116,46 +109,42 @@
         cards.forEach(({ _id, buttonName, promptText, thumbnailUrl, tags }) => {
           const card = document.createElement('div');
           card.className = 'card';
-
           const btnTry = document.createElement('button');
           btnTry.className = 'try-btn';
           btnTry.textContent = buttonName;
           btnTry.addEventListener('click', () => navigator.clipboard.writeText(promptText));
-
           const img = document.createElement('img');
           let imgSrc = '';
           if (thumbnailUrl) {
-            imgSrc = thumbnailUrl.startsWith('/uploads/')
-              ? backendBase + thumbnailUrl
-              : backendBase + '/uploads/' + thumbnailUrl;
+            if (thumbnailUrl.startsWith('http')) {
+              imgSrc = thumbnailUrl;
+            } else if (thumbnailUrl.startsWith('/uploads/')) {
+              imgSrc = backendBase + thumbnailUrl;
+            } else {
+              imgSrc = backendBase + '/uploads/' + thumbnailUrl;
+            }
           }
           img.src = imgSrc || '';
           img.alt = 'Card Image';
-
           const p = document.createElement('p');
           p.textContent = promptText;
-
           const btnDelete = document.createElement('button');
           btnDelete.className = 'delete-btn';
           btnDelete.innerHTML = '×';
           btnDelete.onclick = () => deleteCard(_id);
-
           card.appendChild(btnTry);
           card.appendChild(img);
           card.appendChild(p);
           card.appendChild(btnDelete);
-
           if (tags && tags.length) {
             const tagsDiv = document.createElement('div');
             tagsDiv.className = 'tags';
             tagsDiv.innerHTML = tags.map(tag => `<span>${tag}</span>`).join(' ');
             card.appendChild(tagsDiv);
           }
-
           container.appendChild(card);
         });
       }
-
       form.onsubmit = async function(e) {
         e.preventDefault();
         const buttonName = document.getElementById('buttonName').value.trim();
@@ -164,19 +153,16 @@
         const imageFile = document.getElementById('imageFile').files[0];
         const tagInput = document.getElementById('cardTags').value.trim();
         const tags = tagInput ? tagInput.split(',').map(t => t.trim()).filter(Boolean) : [];
-
         if (!buttonName || !promptText || (!thumbnailUrl && !imageFile)) {
           alert('Sab fields bharni zaroori hain!');
           return;
         }
-
         const formData = new FormData();
         formData.append('buttonName', buttonName);
         formData.append('promptText', promptText);
         formData.append('thumbnailUrl', thumbnailUrl);
         formData.append('tags', JSON.stringify(tags));
         if (imageFile) formData.append('image', imageFile);
-
         try {
           const res = await fetch(backendBase + '/api/cards', { method: 'POST', body: formData });
           const data = await res.json();
@@ -191,10 +177,8 @@
           alert('Error: ' + err.message);
         }
       };
-
       renderAdminCards();
     }
-
     if (localStorage.getItem('adminSession') === '1') showPanel();
     else showLogin();
   </script>
