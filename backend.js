@@ -9,7 +9,7 @@ const app = express();
 const PORT = 5000;
 
 // MongoDB Atlas connection string (replace with your actual URI)
-const MONGODB_URI = 'mongodb+srv://sadilkhan653_db_user:Sadilkhan1234@@cluster0.dd0huok.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://topfactsyt07_db_user:Sadilkhan1234@cluster0.edt13hm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 // Connect to MongoDB Atlas
 mongoose.connect(MONGODB_URI, {
@@ -92,3 +92,4 @@ app.delete('/api/cards/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+
