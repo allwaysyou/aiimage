@@ -1,35 +1,3 @@
-const form = document.getElementById('add-card-form');
-const container = document.getElementById('cards-container');
-
-async function fetchCards() {
-    try {
-        const res = await fetch('http://localhost:5000/api/cards');
-        if (!res.ok) throw new Error('Failed to fetch cards: ' + res.status);
-        return await res.json();
-    } catch (err) {
-        alert('Server se data lana mein error: ' + err.message);
-        return [];
-    }
-}
-
-async function deleteCard(id) {
-    if (!confirm('Kya aap ye card delete karna chahte hain?')) return;
-    try {
-        const res = await fetch(`http://localhost:5000/api/cards/${id}`, {
-            method: 'DELETE'
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert('Card delete ho gaya!');
-            renderAdminCards();
-        } else {
-            alert(data.error || 'Delete karne mein error aayi');
-        }
-    } catch (err) {
-        alert('Server se delete karne mein error: ' + err.message);
-    }
-}
-
 async function renderAdminCards() {
     const cards = await fetchCards();
     container.innerHTML = '';
@@ -53,7 +21,20 @@ async function renderAdminCards() {
         });
 
         const img = document.createElement('img');
-        img.src = thumbnailUrl;
+
+        // Cloudinary URL ya local uploads ke liye logic
+        if (thumbnailUrl) {
+            if (thumbnailUrl.startsWith('http')) {
+                img.src = thumbnailUrl; // Cloudinary URL
+            } else if (thumbnailUrl.startsWith('/uploads/')) {
+                img.src = 'http://localhost:5000' + thumbnailUrl; // Local URL
+            } else {
+                img.src = 'http://localhost:5000/uploads/' + thumbnailUrl;
+            }
+        } else {
+            img.src = ''; // fallback agar image na ho
+        }
+
         img.alt = 'Thumbnail';
 
         const p = document.createElement('p');
@@ -73,41 +54,3 @@ async function renderAdminCards() {
         container.appendChild(card);
     });
 }
-
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const buttonName = document.getElementById('buttonName').value.trim();
-    const promptText = document.getElementById('promptText').value.trim();
-    const thumbnailUrl = document.getElementById('thumbnailUrl').value.trim();
-    const imageFile = document.getElementById('imageFile').files[0];
-
-    if (!buttonName || !promptText || (!thumbnailUrl && !imageFile)) {
-        alert('Sabhi field bharna zaroori hai!');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('buttonName', buttonName);
-    formData.append('promptText', promptText);
-    formData.append('thumbnailUrl', thumbnailUrl);
-    if (imageFile) formData.append('image', imageFile);
-
-    try {
-        const res = await fetch('http://localhost:5000/api/cards', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert(data.message);
-            form.reset();
-            renderAdminCards();
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-        }
-    } catch (err) {
-        alert('Server se data bhejne mein error: ' + err.message);
-    }
-});
-
-renderAdminCards();
