@@ -4,6 +4,7 @@ const container = document.getElementById('cards-container');
 async function fetchCards() {
     try {
         const res = await fetch('http://localhost:5000/api/cards');
+        if (!res.ok) throw new Error('Failed to fetch cards: ' + res.status);
         return await res.json();
     } catch (err) {
         alert('Server se data lana mein error: ' + err.message);
@@ -11,14 +12,15 @@ async function fetchCards() {
     }
 }
 
-async function deleteCard(idx) {
+async function deleteCard(id) {
     if (!confirm('Kya aap ye card delete karna chahte hain?')) return;
     try {
-        const res = await fetch(`http://localhost:5000/api/cards/${idx}`, {
+        const res = await fetch(`http://localhost:5000/api/cards/${id}`, {
             method: 'DELETE'
         });
         const data = await res.json();
         if (res.ok) {
+            alert('Card delete ho gaya!');
             renderAdminCards();
         } else {
             alert(data.error || 'Delete karne mein error aayi');
@@ -31,13 +33,11 @@ async function deleteCard(idx) {
 async function renderAdminCards() {
     const cards = await fetchCards();
     container.innerHTML = '';
-
-    if (cards.length === 0) {
+    if (!cards.length) {
         container.innerHTML = '<p style="color:#bcbcdf;">Koi card abhi tak add nahi hua hai.</p>';
         return;
     }
-
-    cards.forEach(({ buttonName, promptText, thumbnailUrl }, idx) => {
+    cards.forEach(({ _id, buttonName, promptText, thumbnailUrl }) => {
         const card = document.createElement('div');
         card.className = 'card';
 
@@ -59,12 +59,11 @@ async function renderAdminCards() {
         const p = document.createElement('p');
         p.textContent = promptText;
 
-        // Delete button ONLY in admin panel
         const btnDelete = document.createElement('button');
         btnDelete.className = 'delete-btn';
         btnDelete.innerHTML = '×';
         btnDelete.title = 'Card Delete Karein';
-        btnDelete.onclick = () => deleteCard(idx);
+        btnDelete.onclick = () => deleteCard(_id);
 
         card.appendChild(btnTry);
         card.appendChild(img);
@@ -77,7 +76,6 @@ async function renderAdminCards() {
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const buttonName = document.getElementById('buttonName').value.trim();
     const promptText = document.getElementById('promptText').value.trim();
     const thumbnailUrl = document.getElementById('thumbnailUrl').value.trim();
@@ -100,13 +98,12 @@ form.addEventListener('submit', async (e) => {
             body: formData
         });
         const data = await res.json();
-
         if (res.ok) {
             alert(data.message);
             form.reset();
             renderAdminCards();
         } else {
-            alert('Error: ' + data.error);
+            alert('Error: ' + (data.error || 'Unknown error'));
         }
     } catch (err) {
         alert('Server se data bhejne mein error: ' + err.message);

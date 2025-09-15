@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = 5000;
 
-// MongoDB Atlas connection string (replace with your actual URI)
+// MongoDB Atlas connection string
 const MONGODB_URI = 'mongodb+srv://topfactsyt07_db_user:Sadilkhan1234@cluster0.edt13hm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 // Connect to MongoDB Atlas
@@ -18,11 +18,12 @@ mongoose.connect(MONGODB_URI, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+// Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer storage setup for image uploads
+// Multer config for file upload handling
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, './uploads/');
@@ -33,7 +34,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Define Mongoose schema and model for Card
+// Define the Mongoose schema and model for cards
 const cardSchema = new mongoose.Schema({
   buttonName: { type: String, required: true },
   promptText: { type: String, required: true },
@@ -41,15 +42,17 @@ const cardSchema = new mongoose.Schema({
 });
 const Card = mongoose.model('Card', cardSchema);
 
-// POST endpoint to add a new card with image upload
+// POST endpoint to add a card (with optional image upload)
 app.post('/api/cards', upload.single('image'), async (req, res) => {
   const { buttonName, promptText } = req.body;
   let thumbnailUrl = req.body.thumbnailUrl;
 
+  // Agar image upload hui hai to uska path use karo
   if (req.file) {
     thumbnailUrl = `/uploads/${req.file.filename}`;
   }
 
+  // Validate required data
   if (!buttonName || !promptText || !thumbnailUrl) {
     return res.status(400).json({ error: 'Sabhi fields chahiye' });
   }
@@ -57,6 +60,7 @@ app.post('/api/cards', upload.single('image'), async (req, res) => {
   try {
     const newCard = new Card({ buttonName, promptText, thumbnailUrl });
     await newCard.save();
+    console.log('New card saved:', newCard);
     res.json({ message: 'Card successfully added!' });
   } catch (err) {
     console.error('Error adding card:', err);
@@ -75,7 +79,7 @@ app.get('/api/cards', async (req, res) => {
   }
 });
 
-// DELETE endpoint to delete a card by MongoDB ID
+// DELETE endpoint to delete a card by id
 app.delete('/api/cards/:id', async (req, res) => {
   const id = req.params.id;
 
@@ -91,5 +95,7 @@ app.delete('/api/cards/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
-
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});

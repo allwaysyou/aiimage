@@ -21,7 +21,9 @@
     </ul>
   </nav>
   <script>
-    function toggleNavbarLinks() {document.querySelector('.navbar-links').classList.toggle('active');}
+    function toggleNavbarLinks() {
+      document.querySelector('.navbar-links').classList.toggle('active');
+    }
   </script>
   <div id="panel-root"></div>
   <script>
@@ -40,28 +42,29 @@
           </form>
         </div>
       `;
-      document.getElementById('login-form').onsubmit = function(e){
+      document.getElementById('login-form').onsubmit = function(e) {
         e.preventDefault();
         const u = document.getElementById('uname').value;
         const p = document.getElementById('upass').value;
-        if(u === ADMIN_USER && p === ADMIN_PASS){
-          localStorage.setItem('adminSession','1');
+        if (u === ADMIN_USER && p === ADMIN_PASS) {
+          localStorage.setItem('adminSession', '1');
           showPanel();
         } else {
           alert('Invalid credentials!');
         }
-      }
+      };
     }
+
     function showPanel() {
       document.getElementById('panel-root').innerHTML = `
         <div class="form-container">
           <h1 style="text-align:center;">Admin Panel - Naya Card Add Karein</h1>
           <form id="add-card-form" enctype="multipart/form-data">
-            <div class="form-group"><label>Button Name:</label><input type="text" id="buttonName" required /></div>
-            <div class="form-group"><label>Prompt Text:</label><input type="text" id="promptText" required /></div>
-            <div class="form-group"><label>YouTube Thumbnail URL (optional):</label><input type="url" id="thumbnailUrl" /></div>
-            <div class="form-group"><label>Direct Image Upload:</label><input type="file" id="imageFile" accept="image/*" /></div>
-            <div class="form-group"><label>Tags (comma separated):</label><input type="text" id="cardTags" /></div>
+            <div class="form-group"><label>Button Name:</label><input type="text" id="buttonName" name="buttonName" required /></div>
+            <div class="form-group"><label>Prompt Text:</label><input type="text" id="promptText" name="promptText" required /></div>
+            <div class="form-group"><label>YouTube Thumbnail URL (optional):</label><input type="url" id="thumbnailUrl" name="thumbnailUrl" /></div>
+            <div class="form-group"><label>Direct Image Upload:</label><input type="file" id="imageFile" name="image" accept="image/*" /></div>
+            <div class="form-group"><label>Tags (comma separated):</label><input type="text" id="cardTags" name="tags" /></div>
             <button type="submit">Card Add Karein</button>
           </form>
           <h2 style="margin:18px 0 10px;color:#ffe;font-size:1.2rem;text-align:center;">Added Cards</h2>
@@ -71,32 +74,36 @@
       `;
       loadAdminJS();
     }
+
     function logoutAdmin() {
       localStorage.removeItem('adminSession');
       showLogin();
     }
+
     function loadAdminJS() {
       const form = document.getElementById('add-card-form');
       const container = document.getElementById('cards-container');
 
       async function fetchCards() {
-        try { 
-          const res = await fetch(backendBase + '/api/cards'); 
-          return await res.json(); 
-        } catch (err) { 
+        try {
+          const res = await fetch(backendBase + '/api/cards');
+          return await res.json();
+        } catch (err) {
           alert('Server error: ' + err.message);
-          return []; 
+          return [];
         }
       }
 
-      async function deleteCard(idx) {
+      async function deleteCard(id) {
         if (!confirm('Delete karna hai?')) return;
         try {
-          const res = await fetch(`${backendBase}/api/cards/${idx}`, { method: 'DELETE' });
+          const res = await fetch(`${backendBase}/api/cards/${id}`, { method: 'DELETE' });
           const data = await res.json();
           if (res.ok) renderAdminCards();
           else alert(data.error || 'Delete error');
-        } catch (err) { alert('Delete error: ' + err.message); }
+        } catch (err) {
+          alert('Delete error: ' + err.message);
+        }
       }
 
       async function renderAdminCards() {
@@ -106,15 +113,16 @@
           container.innerHTML = '<p style="color:#bcbcdf;">Koi card abhi tak add nahi hua hai.</p>';
           return;
         }
-        cards.forEach(({ buttonName, promptText, thumbnailUrl, tags }, idx) => {
+        cards.forEach(({ _id, buttonName, promptText, thumbnailUrl, tags }) => {
           const card = document.createElement('div');
           card.className = 'card';
+
           const btnTry = document.createElement('button');
           btnTry.className = 'try-btn';
           btnTry.textContent = buttonName;
-          btnTry.addEventListener('click',()=>navigator.clipboard.writeText(promptText));
+          btnTry.addEventListener('click', () => navigator.clipboard.writeText(promptText));
+
           const img = document.createElement('img');
-          // FIX image path logic
           let imgSrc = '';
           if (thumbnailUrl) {
             imgSrc = thumbnailUrl.startsWith('/uploads/')
@@ -123,27 +131,32 @@
           }
           img.src = imgSrc || '';
           img.alt = 'Card Image';
+
           const p = document.createElement('p');
           p.textContent = promptText;
+
           const btnDelete = document.createElement('button');
           btnDelete.className = 'delete-btn';
           btnDelete.innerHTML = '×';
-          btnDelete.onclick = () => deleteCard(idx);
-          card.appendChild(btnTry); 
-          card.appendChild(img); 
-          card.appendChild(p); 
+          btnDelete.onclick = () => deleteCard(_id);
+
+          card.appendChild(btnTry);
+          card.appendChild(img);
+          card.appendChild(p);
           card.appendChild(btnDelete);
-          if(tags && tags.length){
-            const tagsDiv=document.createElement('div');
-            tagsDiv.className='tags';
-            tagsDiv.innerHTML=tags.map(tag=>`<span>${tag}</span>`).join(' ');
+
+          if (tags && tags.length) {
+            const tagsDiv = document.createElement('div');
+            tagsDiv.className = 'tags';
+            tagsDiv.innerHTML = tags.map(tag => `<span>${tag}</span>`).join(' ');
             card.appendChild(tagsDiv);
           }
+
           container.appendChild(card);
         });
       }
 
-      form.onsubmit = async function(e){
+      form.onsubmit = async function(e) {
         e.preventDefault();
         const buttonName = document.getElementById('buttonName').value.trim();
         const promptText = document.getElementById('promptText').value.trim();
@@ -151,33 +164,38 @@
         const imageFile = document.getElementById('imageFile').files[0];
         const tagInput = document.getElementById('cardTags').value.trim();
         const tags = tagInput ? tagInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+
         if (!buttonName || !promptText || (!thumbnailUrl && !imageFile)) {
-          alert('Fields required!');
+          alert('Sab fields bharni zaroori hain!');
           return;
         }
+
         const formData = new FormData();
         formData.append('buttonName', buttonName);
         formData.append('promptText', promptText);
         formData.append('thumbnailUrl', thumbnailUrl);
         formData.append('tags', JSON.stringify(tags));
         if (imageFile) formData.append('image', imageFile);
+
         try {
           const res = await fetch(backendBase + '/api/cards', { method: 'POST', body: formData });
           const data = await res.json();
           if (res.ok) {
-            alert(data.message || 'Card added!');
+            alert(data.message || 'Card add ho gaya!');
             form.reset();
             renderAdminCards();
           } else {
-            alert('Error: ' + data.error);
+            alert('Error: ' + (data.error || 'Unknown error'));
           }
         } catch (err) {
           alert('Error: ' + err.message);
         }
-      }
+      };
+
       renderAdminCards();
     }
-    if(localStorage.getItem('adminSession')==='1') showPanel();
+
+    if (localStorage.getItem('adminSession') === '1') showPanel();
     else showLogin();
   </script>
 </body>

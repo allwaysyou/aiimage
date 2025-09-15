@@ -25,17 +25,19 @@
       document.querySelector('.navbar-links').classList.toggle('active');
     }
   </script>
+
   <div class="page-container">
     <h1 style="margin-top:10px; font-size:2rem; text-align:center;">Cards</h1>
     <div class="search-bar-container">
       <div class="search-bar-premium">
-        <input type="text" id="searchInput" placeholder="🔍 Search cards, prompts, tags..." />
+        <input type="text" id="searchInput" placeholder="🔍 Search cards, prompts, tags..." autocomplete="off" />
       </div>
     </div>
     <div class="cards-list" id="cards-container"></div>
   </div>
+
   <script>
-    const backendBase = 'https://aiimage-q8fv.onrender.com'; // apne deployed backend URL se replace karein
+    const backendBase = 'https://aiimage-q8fv.onrender.com'; // backend url
     let allCards = [];
 
     async function fetchCards() {
@@ -55,40 +57,42 @@
       return cards.filter(card =>
         (card.buttonName && card.buttonName.toLowerCase().includes(query)) ||
         (card.promptText && card.promptText.toLowerCase().includes(query)) ||
-        (Array.isArray(card.tags) && card.tags.some(t => t.toLowerCase().includes(query)))
+        (Array.isArray(card.tags) && card.tags.some(tag => tag.toLowerCase().includes(query)))
       );
     }
 
     function showCards(cards) {
       const container = document.getElementById('cards-container');
       container.innerHTML = '';
+
       if (cards.length === 0) {
         container.innerHTML = '<p style="color:#bcbcdf; text-align:center;">Koi card available nahi hai.</p>';
         return;
       }
+
       cards.forEach(({ _id, buttonName, promptText, thumbnailUrl, tags }) => {
         const card = document.createElement('div');
         card.className = 'card';
 
         const btnTry = document.createElement('button');
         btnTry.className = 'try-btn';
-        btnTry.textContent = buttonName;
+        btnTry.textContent = buttonName || 'Try';
         btnTry.addEventListener('click', (e) => {
           e.stopPropagation();
-          navigator.clipboard.writeText(promptText).then(() => {
-            alert('Prompt copied: ' + promptText);
-          });
+          navigator.clipboard.writeText(promptText);
+          btnTry.textContent = "COPIED!";
+          setTimeout(() => (btnTry.textContent = buttonName || 'Try'), 1200);
         });
 
         const img = document.createElement('img');
-        let imgSrc = '';
         if (thumbnailUrl) {
-          imgSrc = thumbnailUrl.startsWith('/uploads/')
+          img.src = thumbnailUrl.startsWith('/uploads/')
             ? backendBase + thumbnailUrl
             : backendBase + '/uploads/' + thumbnailUrl;
+        } else {
+          img.src = ''; // fallback if no image
         }
-        img.src = imgSrc;
-        img.alt = 'card img';
+        img.alt = 'card image';
 
         const p = document.createElement('p');
         p.textContent = promptText || '';
@@ -104,15 +108,14 @@
           card.appendChild(tagsDiv);
         }
 
-        card.onclick = () => window.location = 'card.html?id=' + _id;
+        card.onclick = () => window.location = `card.html?id=${_id}`;
 
         container.appendChild(card);
       });
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
-      const query = e.target.value;
-      showCards(filterCards(allCards, query));
+      showCards(filterCards(allCards, e.target.value));
     });
 
     async function renderCards() {
