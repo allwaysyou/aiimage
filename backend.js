@@ -5,6 +5,9 @@ const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
 
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
 const app = express();
 const PORT = 5000;
 
@@ -18,23 +21,32 @@ mongoose.connect(MONGODB_URI, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Middleware setup
-app.use(cors());
-app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: 'dx3xysm2h',                // Aapka Cloudinary cloud name
+  api_key: '966345846726722',              // Aapka API Key
+  api_secret: 'UBH0aNXgotN3wuj25WRlPWFD-1g'            // Yahan apna API Secret dalen (secure rakhen)
+});
 
-// Multer config for file upload handling
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, './uploads/');
-  },
-  filename: function(req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+// Multer storage setup using Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'uploads',                   // Cloudinary me folder jahan images jayengi
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ quality: 'auto' }]
   }
 });
-const upload = multer({ storage: storage });
 
-// Define the Mongoose schema and model for cards
+const upload = multer({ storage });
+
+// Parse JSON body requests
+app.use(cors());
+app.use(bodyParser.json());
+// Express static not needed for uploads now, kyunki images Cloudinary pe hain
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Mongoose schema and model
 const cardSchema = new mongoose.Schema({
   buttonName: { type: String, required: true },
   promptText: { type: String, required: true },
@@ -42,17 +54,16 @@ const cardSchema = new mongoose.Schema({
 });
 const Card = mongoose.model('Card', cardSchema);
 
-// POST endpoint to add a card (with optional image upload)
+// POST endpoint to add card with Cloudinary image upload
 app.post('/api/cards', upload.single('image'), async (req, res) => {
   const { buttonName, promptText } = req.body;
   let thumbnailUrl = req.body.thumbnailUrl;
 
-  // Agar image upload hui hai to uska path use karo
-  if (req.file) {
-    thumbnailUrl = `/uploads/${req.file.filename}`;
+  // Agar image upload hui hai to Cloudinary URL use karo
+  if (req.file && req.file.path) {
+    thumbnailUrl = req.file.path; // Cloudinary image URL
   }
 
-  // Validate required data
   if (!buttonName || !promptText || !thumbnailUrl) {
     return res.status(400).json({ error: 'Sabhi fields chahiye' });
   }
@@ -68,7 +79,7 @@ app.post('/api/cards', upload.single('image'), async (req, res) => {
   }
 });
 
-// GET endpoint to fetch all cards
+// GET endpoint to fetch cards
 app.get('/api/cards', async (req, res) => {
   try {
     const cards = await Card.find({});
@@ -79,10 +90,9 @@ app.get('/api/cards', async (req, res) => {
   }
 });
 
-// DELETE endpoint to delete a card by id
+// DELETE endpoint to delete card by ID
 app.delete('/api/cards/:id', async (req, res) => {
   const id = req.params.id;
-
   try {
     const deletedCard = await Card.findByIdAndDelete(id);
     if (!deletedCard) {
