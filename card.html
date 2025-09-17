@@ -93,6 +93,7 @@
     <!-- ACTUAL CARD DATA -->
     <div class="card-title" id="cardTitle"></div>
     <div class="prompt-text" id="cardPrompt"></div>
+    <img id="cardImage" alt="Card Image" style="display:none; margin: 10px auto; max-width: 90%; border-radius: 12px;" />
     <button class="copy-prompt-btn" id="copyPromptBtn">Copy Prompt</button>
     <div class="upload-section">
       <label for="fileInput" class="file-label">अपनी फोटो चुनें</label>
@@ -129,11 +130,29 @@
         document.getElementById('cardTitle').textContent = 'Card Not Found!';
         document.getElementById('cardPrompt').textContent = '';
         document.getElementById('copiedText').textContent = '';
+        document.getElementById('cardImage').style.display = 'none';
         return;
       }
       document.getElementById('cardTitle').textContent = card.buttonName || 'AI Card';
       document.getElementById('cardPrompt').textContent = card.promptText || '';
       document.getElementById('copiedText').textContent = '';
+      // Show card image
+      const img = document.getElementById('cardImage');
+      if (card.thumbnailUrl) {
+        let imgSrc = '';
+        if (card.thumbnailUrl.startsWith('http')) {
+          imgSrc = card.thumbnailUrl;
+        } else if (card.thumbnailUrl.startsWith('/uploads/')) {
+          imgSrc = backendBase + card.thumbnailUrl;
+        } else {
+          imgSrc = backendBase + '/uploads/' + card.thumbnailUrl;
+        }
+        img.src = imgSrc;
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+
       // Copy Prompt Button Logic
       const copyPromptBtn = document.getElementById('copyPromptBtn');
       copyPromptBtn.onclick = function () {
@@ -143,6 +162,7 @@
           setTimeout(() => (copyPromptBtn.textContent = 'Copy Prompt'), 1500);
         });
       };
+
       // File upload/preview logic
       const fileInput = document.getElementById('fileInput');
       const previewImg = document.getElementById('previewImg');
@@ -159,6 +179,7 @@
           previewImg.style.display = 'none';
         }
       };
+
       // Generate Now Button Logic
       document.getElementById('genBtn').onclick = function () {
         navigator.clipboard.writeText(card.promptText).then(() => {
